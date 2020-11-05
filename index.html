@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="UTF-8">
+  <title>一站式信息订阅中心</title>
+  <style>
+    :root {
+      /* Color */
+      --red: #f44336; /* 红 */
+      --pink: #e91e63; /* 粉 */
+      --purple: #9c27b0; /* 紫 */
+      --deep-purple: #673ab7; /* 深紫 */
+      --indigo: #3f51b5; /* 靛青 */
+      --blue: #2196f3; /* 蓝 */
+      --light-blue: #03a9f4; /* 亮蓝 */
+      --cyan: #00bcd4; /* 青 */
+      --teal: #009688; /* 蓝绿 */
+      --green: #4caf50; /* 绿 */
+      --light-green: #8bc34a; /* 亮绿 */
+      --lime: #cddc39; /* 柠檬 */
+      --yellow: #ffeb3b; /* 黄 */
+      --amber: #ffc107; /* 琥珀 */
+      --orange: #ff9800; /* 橙 */
+      --deep-orange: #ff5722; /* 深橙 */
+      --brown: #795548; /* 棕 */
+      --grey: #9e9e9e; /* 灰 */
+      --blue-grey: #607d8b; /* 蓝灰 */
+
+      --header-height: 64px;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active  {
+      -webkit-box-shadow: 0 0 0 999px white inset !important;
+    }
+    body {
+      --primary-color: var(--blue);
+      position: relative;
+      margin: 0;
+      font-family: "Roboto", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      background: #efefef;
+    }
+    header {
+      position: fixed;
+      height: var(--header-height);
+      width: 100%;
+      padding: 16px 32px;
+      color: #fff;
+      font-size: 22px;
+      line-height: 32px;
+      background: var(--blue-grey);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    }
+    body > nav {
+      display: inline-block;
+      width: 256px;
+      height: 100vh;
+      padding: var(--header-height) 0 24px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+    body > nav > ol {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin: 12px 0;
+      padding: 0;
+    }
+    body > nav > ol > li {
+      position: relative;
+      height: 64px;
+      color: #222;
+      padding: 16px 24px;
+      font-size: 16px;
+      line-height: 32px;
+      cursor: pointer;
+      transition: background ease-in-out 250ms;
+    }
+    body > nav > ol > li[data-selected] {
+      background: #efefef;
+    }
+    body > nav > ol > li::after {
+      display: block;
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 96px;
+      height: 1px;
+      background: #eee;
+    }
+    main {
+      position: absolute;
+      top: 12vh;
+      left: 720px;
+      width: 720px;
+      height: 1280px;
+      padding: 36px 16px;
+      background: #444;
+      border-radius: 54px;
+      box-sizing: content-box;
+      transform: scale(0.45);
+      transform-origin: left top;
+    }
+    main > div {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 36px;
+      overflow: hidden;
+    }
+    section {
+      --status-bar-height: 48px;
+      --nav-bar-height: 92px;
+
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      padding: var(--status-bar-height) 0 var(--nav-bar-height);
+      opacity: 0;
+      letter-spacing: 1px;
+      pointer-events: none;
+      transition: opacity ease-in-out 160ms;
+    }
+    main > div > section[data-selected] {
+      opacity: 1;
+      pointer-events: all;
+    }
+    section[data-name='status-bar'] {
+      --width: 720px;
+      --height: var(--status-bar-height);
+      z-index: 1;
+      width: var(--width);
+      height: var(--height);
+      padding: 0;
+      background: transparent;
+      transition: all ease-in-out 250ms;
+      opacity: 1;
+      pointer-events: all;
+      cursor: pointer;
+    }
+    section[data-name='status-bar'][data-mode='hide'] {
+      opacity: 0;
+      top: calc(0px - var(--height));
+    }
+    section[data-name='status-bar'][data-mode='primary-color'] {
+      background: var(--primary-color);
+    }
+    section[data-name='status-bar'][data-mode='semi-transparent'] {
+      background: rgba(0, 0, 0, .15);
+    }
+    section[data-name='status-bar'] img {
+      width: var(--width);
+      height: var(--height);
+      object-fit: cover;
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+    section[data-name='start'] {
+      background: #fff;
+    }
+    section[data-name='start'] svg {
+      width: 100%;
+      height: 100%;
+    }
+    section[data-name='start'] svg .bell {
+      transform-origin: center top;
+      animation: 2500ms ease-in-out 500ms infinite running ring;
+    }
+    @keyframes ring {
+      0%, 100% {
+        transform: rotate(0);
+      }
+      20%, 22% {
+        transform: rotate(6deg);
+      }
+      30% {
+        transform: rotate(-5deg);
+      }
+      40% {
+        transform: rotate(4deg);
+      }
+      45% {
+        transform: rotate(-0.5deg);
+      }
+      50% {
+        transform: rotate(0deg);
+      }
+    }
+    section[data-name='start'] svg .colored {
+      fill: var(--primary-color);
+    }
+    section[data-name='login'] {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 48px;
+      overflow: hidden;
+      background: #fff;
+    }
+    section[data-name='login'] img {
+      --size: 64px;
+      width: var(--size);
+      height: var(--size);
+      margin: 96px 0 24px;
+    }
+    section[data-name='login'] h1 {
+      font-size: 42px;
+      font-weight: 500;
+      margin-block: unset;
+      margin: 0 auto 48px;
+    }
+    section[data-name='login'] .login-form {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 12px 0;
+      margin: 0 auto;
+      font-size: 14px;
+      line-height: 32px;
+      border-radius: 12px;
+      background: #fff;
+      /*box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);*/
+      transition: all ease-in-out 250ms;
+    }
+    section[data-name='login'] .input-container {
+      position: relative;
+      width: 100%;
+      height: 112px;
+      margin: 0 0 12px;
+    }
+    section[data-name='login'] .input-container > input {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 96px;
+      padding: 0 28px;
+      font-size: 32px;
+      line-height: 96px;
+      outline: none;
+      border: 3px solid #ddd;
+      border-radius: 8px;
+      transition: border ease-in-out 250ms;
+    }
+    section[data-name='login'] .input-container > input:focus {
+      border-color: var(--primary-color);
+    }
+    section[data-name='login'] .input-container > input:not(:focus):valid {
+      /*font-size: 28px;*/
+      /*border-width: 0;*/
+    }
+    section[data-name='login'] .input-container > label {
+      position: absolute;
+      bottom: 0;
+      width: fit-content;
+      height: 32px;
+      margin: 0 20px 32px;
+      padding: 0 8px;
+      color: #aaa;
+      font-size: 32px;
+      line-height: 32px;
+      pointer-events: none;
+      transition: all ease-in-out 250ms;
+    }
+    section[data-name='login'] .input-container > input:focus + label,
+    section[data-name='login'] .input-container > input:valid + label {
+      bottom: 48px;
+      margin: 0 16px 32px;
+      font-size: 28px;
+      font-weight: 700;
+      background: #fff;
+      pointer-events: all;
+    }
+    section[data-name='login'] .input-container > input:focus + label {
+      color: var(--primary-color);
+    }
+    section[data-name='login'] .login-form > span.tips {
+      color: var(--primary-color);
+      font-size: 28px;
+      font-weight: 400;
+      line-height: 48px;
+      margin: 12px 0;
+      cursor: pointer;
+    }
+    section[data-name='login'] .login-form > button {
+      --width: 160px;
+      --height: 72px;
+      position: absolute;
+      right: 112px;
+      bottom: 72px;
+      width: var(--width);
+      height: var(--height);
+      color: #fff;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: var(--height);
+      border: none;
+      outline: none;
+      overflow: hidden;
+      background: var(--primary-color);
+      transform: translate(50%, 50%);
+      transition-property: color, border-radius, all;
+      transition-duration: 0ms, 1200ms, 400ms;
+      transition-timing-function: ease-in-out;
+      cursor: pointer;
+    }
+    section[data-name='login'] .login-form > button:hover {
+      /*box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);*/
+    }
+    section[data-name='login'] .login-form > button.logging {
+      color: transparent;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      animation: 1200ms logging ease-in-out 400ms infinite alternate;
+    }
+    @keyframes logging {
+      0%, 10% {
+        width: 32px;
+        height: 32px;
+      }
+      100% {
+        width: 64px;
+        height: 64px;
+      }
+    }
+    section[data-main] {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: var(--status-bar-height) 0 0;
+    }
+    section[data-main] h1 {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 42px;
+      font-weight: 500;
+      padding: 0 48px;
+      margin-block: unset;
+      margin: 36px 0 48px;
+    }
+    section[data-main] h1 button {
+      --height: 72px;
+      width: 108px;
+      height: var(--height);
+      padding: 0;
+      color: var(--primary-color);
+      font-size: 28px;
+      line-height: var(--height);
+      background: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+    }
+    section[data-main] > ol {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 0 0 var(--nav-bar-height);
+      margin: 0;
+      overflow: auto;
+    }
+    .scrollable::-webkit-scrollbar {
+      --size: 12px;
+      width: var(--size);
+      height: var(--size);
+      background-color: transparent;
+    }
+    .scrollable::-webkit-scrollbar-thumb {
+      background-color: var(--primary-color);
+    }
+    .scrollable::-webkit-scrollbar-button {
+      height: 48px;
+      background: transparent;
+    }
+    section[data-main] > ol li {
+      position: relative;
+    }
+    section[data-name='selection'] > ol li::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 60%;
+      height: 1px;
+      background: #ddd;
+      transform: translate(-50%, 0);
+    }
+    section[data-name='selection'] > ol label {
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 160px;
+      padding: 0 48px;
+    }
+    section[data-name='selection'] > ol > li img {
+      --size: 84px;
+      width: var(--size);
+      height: var(--size);
+      margin: 0 36px 0 0;
+      border-radius: 50%;
+    }
+    section[data-name='selection'] span > span {
+      display: block;
+    }
+    section[data-name='selection'] label > span {
+      flex-grow: 1;
+    }
+    section[data-name='selection'] span > span:first-of-type {
+      font-size: 32px;
+      margin: 0 0 12px;
+    }
+    section[data-name='selection'] span > span:last-of-type {
+      color: #666;
+      font-size: 28px;
+    }
+    section[data-name='selection'] label input {
+      --size: 32px;
+      width: var(--size);
+      height: var(--size);
+    }
+    section[data-name='notify'] {
+      overflow: auto;
+    }
+    section[data-name='notify'] > ol {
+      flex-shrink: 0;
+      height: auto;
+    }
+    section[data-name='notify'] .card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin: 12px 12px;
+      padding: 36px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 2px 6px rgba(0,0,0,0.23);
+      cursor: pointer;
+    }
+    section[data-name='notify'] .card figure {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin: 0;
+    }
+    section[data-name='notify'] .card figure img {
+      --size: 36px;
+      width: var(--size);
+      height: var(--size);
+      margin: 0 32px 0 0;
+    }
+    section[data-name='notify'] .card figure figcaption {
+      font-size: 22px;
+    }
+    section[data-name='notify'] .card h2 {
+      margin: 32px 0 32px;
+      color: var(--primary-color);
+      font-size: 32px;
+    }
+    section[data-name='notify'] .card p {
+      margin: 0;
+      font-size: 28px;
+      line-height: 46px;
+    }
+    section[data-name='notify'] .card p span {
+      color: #666;
+    }
+    section[data-name='notify'] .card p span::after {
+      content: ' — ';
+      color: inherit;
+    }
+    section[data-name='nav-bar'] {
+      --width: 720px;
+      --height: var(--nav-bar-height);
+      z-index: 1;
+      top: auto;
+      bottom: 0;
+      width: var(--width);
+      height: var(--height);
+      padding: 0;
+      color: var(--primary-color);
+      background: transparent;
+      border-top: 2px solid #eee;
+      transition: all ease-in-out 250ms;
+      opacity: 1;
+      pointer-events: all;
+      cursor: pointer;
+    }
+    section[data-name='nav-bar'][data-mode='hide'] {
+      opacity: 0;
+      bottom: calc(0px - var(--nav-bar-height));
+    }
+    section[data-name='nav-bar'][data-mode='semi-transparent'] {
+      background: rgba(255, 255, 255, .75);
+    }
+    section[data-name='nav-bar'][data-mode='primary-color'] {
+      color: #fff;
+      background: var(--primary-color);
+      border-top: none;
+    }
+    section[data-name='nav-bar'] > nav {
+      width: 100%;
+      user-select: none;
+    }
+    section[data-name='nav-bar'] > nav > ol {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    section[data-name='nav-bar'] > nav li {
+      flex-grow: 1;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+      font-size: 32px;
+      line-height: var(--nav-bar-height);
+    }
+  </style>
+</head>
+<body>
+  <header>一站式信息订阅</header>
+  <nav>
+    <ol>
+      <li data-name="notify-panel" data-ripple>通知面板</li>
+    </ol>
+    <ol>
+      <li data-name="start" data-ripple data-selected>启动页</li>
+      <li data-name="login" data-ripple>登录页</li>
+      <li data-name="selection" data-ripple>选择订阅消息</li>
+      <li data-name="notify" data-ripple>通知消息</li>
+    </ol>
+  </nav>
+  <main>
+    <div id="viewport">
+      <section data-name="status-bar" data-mode="hide">
+        <img src="status-bar.png" alt="状态栏">
+      </section>
+
+      <section data-name="notify-panel" data-status-bar="hide" data-nav-bar="hide" data-mode="hide">
+
+      </section>
+
+      <section data-name="start" data-status-bar="hide" data-nav-bar="hide" data-selected>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280">
+          <path class="bell colored" fill="#2196f3" d="M482.61 538.75V411.27c0-77.58-47.61-114.27-105.79-130.7-5.13-17.8-7.7-24.07-16.82-24.07-16.94 0-15.68 7.57-20.81 25.37C278 303 237.31 336.69 237.31 414.27v124.48l-31.21 62c-3.29 4.51-3.83 8-3.83 14.44v36.5c0 13.32 2.63 17.6 12.31 17.6h292.06c9.68 0 11-3 11-16.3v-36.5c0-6.39.76-8.62-2.53-13.14zm25.79 121.57l-295.57-.9v-48.1l30.87-63.4c3.29-4.52 4.38-12 4.37-18.36l.55-120.06c1.91-80.65 63-118.93 111.34-118.93s113.42 52.31 111.89 115.76v128.94a23.79 23.79 0 005.15 15.25l31.42 61.7zM360 703.5c6.52 0 26.06-3.91 30.33-20.5h-59.24c5.45 15.29 22.39 20.5 28.91 20.5z"/>
+          <g fill="#fff" stroke="#fff" stroke-miterlimit="10" stroke-width="13">
+            <path d="M295.81 293.8h8.79a61.38 61.38 0 01-7.33 24.93h2.2v65.61h-7.33v-58.28c-.73 1-1.83 2.56-3.3 4.76q-3.3 4.77-4.76 7h-2.93q12.85-17.26 14.66-44.02zm8.79 17.6v-3.67h19.8a21.47 21.47 0 01-1.84-4 45.66 45.66 0 01-4-10.26l.37-.37a100 100 0 0111.36 8.06q-.74 2.94-4.4 6.6h20.53v3.67zm2.94 10.26h33.72v3.67h-33.72zm0 14.66h33.72V340h-33.72zm8.79 10.26v3.67h16.86v-4.4h7.33v38.49h-7.33v-5.87h-16.86v5.87H309v-37.76zm0 7.33v20.9h16.86v-20.9zM382.72 369.31v-13.93h7.34v14.3q-.37 6.22-12.47 10.26v-4c3.67-1.5 5.41-3.7 5.13-6.63zm3.67-68.18h7.33v2.94H404q1.47-2.2 1.47-10.27h8.8q-.37 7.33-7.33 10.27h18.32v-2.94h7.33v48.39h-7.33v-5.14h-31.54v5.14h-7.33zm7.33 39.59h31.52v-33h-31.52v8.07h26.39v3.66h-26.39v8.06h25.66v3.67h-25.66zm1.47 34.45v-22.72h7.33v21.62q-.37 2.56 2.56 2.94h13.2a3.3 3.3 0 003.66-3.3l2.2-11.73h1.1v9.53h2.2V377q0 6.58-6.6 6.59h-18.69q-7.33.01-6.96-8.42zm12.09-26.75h.37c5.13 4.39 8.8 8.19 11 11.36a50.86 50.86 0 01-3.66 7.33 56.4 56.4 0 01-7.71-18.69zm19.79 5.49h.37A72.35 72.35 0 01441.37 370a43.34 43.34 0 01-4 7q-6.27-8.06-10.3-23.09zM298 509v-42.19h-11.72v-3.67H298v-3.67h7.33v47.29A42.3 42.3 0 00321.1 495h.36q-7 17.24-31.52 24.92 1.83-6.24-1.46-9.89A54.42 54.42 0 00298 509zm-4.4-74l.37-.37a74.9 74.9 0 0111.36 11.73 31.42 31.42 0 01-4.77 8.8h-.36q-4.04-7.79-6.59-20.24zm35.19 9.89h-16.85v-3.66h38.11v3.66h-13.92v70.74q-.37 6.6-12.83 9.9c-.5-1.47-1.23-2-2.2-1.47l-4 .74-.74-1.1a3.94 3.94 0 011.1-.74q11.35-3.66 11.37-7.33zM379.06 522.88v-83.2h7.33v74.41q11-8.06 11.73-23.09v-3.67h-4.4v-25.66h6.6v1.47h8.79l8.07-16.86 3.66 2.2-7.69 14.66h2.56v-1.47h6.6v25.66H415V506q-.37 2.94 2.93 2.57c1.47.25 2.32-.61 2.57-2.57l1.83-14.29h1.47l-.37 12.46H426q0 12.84-8.43 11.36h-2.19q-7.71.36-7-6.59v-21.61H415v-4.4h-14.68v4.4h5.13q.36 18-16.49 27.49h-2.57v8.06zm16.13-72.57h-.37a77.27 77.27 0 01-4-16.13l.37-.36A97.33 97.33 0 01400 443a7.57 7.57 0 01-1.46 2.93l-.37.37a99.12 99.12 0 018.06 6.6 38 38 0 01-2.56 7.33h-.37a36.43 36.43 0 01-5.5-13.56 26.77 26.77 0 01-2.61 3.64zM415 467.54h-14.68v11.73H415zm13.93-24.19h-25.68V439h26.39v-3h6.6v76.23q1.1 10.63-11.73 13.57c-.25-1.23-1.35-1.6-3.3-1.1l-5.13.73-.37-1.1q14.3-4 13.2-9.53zM297.27 636.87h-8.06v-48.38h8.06v5.13h15.4v-19.06h8.06v19.06h15.4v-5.13h8.06v47.65h-8.06v-5.86h-15.4v35.55h-8.06v-35.55h-15.4zm15.4-10.26v-29.32h-15.4v29.32zm8.06-29.32v29.32h15.4v-29.32zM383.46 642.74v-46.92h7.33v41.79q-.37 8.05-13.2 15.39v-4.4c3.67-.97 5.62-2.93 5.87-5.86zm13.19 16.49V587H404v67.8q0 2.56 2.94 2.94h10.26q3.66-.37 4-3.3l1.47-19.8h1.83v13.2h2.93v2.57q.74 13.92-5.13 13.92h-20.52c-3.17-.21-4.89-1.93-5.13-5.1zm19.8-49.48h-.37q-4-5.85-12.1-32.62l.37-.37q1.09 1.85 5.86 8.8 6.6 9.9 10.63 13.93a71.31 71.31 0 01-4.39 10.26zm7.33-19.75l.36-.37q7 16.86 16.5 45.82-.37 5.13-6.23 13.19H434q-2.57-13.54-4.77-27.12-2.88-15.79-5.45-31.52z"/>
+          </g>
+          <g class="colored" fill="#2196f3">
+            <path d="M295.81 293.8h8.79a61.38 61.38 0 01-7.33 24.93h2.2v65.61h-7.33v-58.28c-.73 1-1.83 2.56-3.3 4.76q-3.3 4.77-4.76 7h-2.93q12.85-17.26 14.66-44.02zm8.79 17.6v-3.67h19.8a21.47 21.47 0 01-1.84-4 45.66 45.66 0 01-4-10.26l.37-.37a100 100 0 0111.36 8.06q-.74 2.94-4.4 6.6h20.53v3.67zm2.94 10.26h33.72v3.67h-33.72zm0 14.66h33.72V340h-33.72zm8.79 10.26v3.67h16.86v-4.4h7.33v38.49h-7.33v-5.87h-16.86v5.87H309v-37.76zm0 7.33v20.9h16.86v-20.9zM382.72 369.31v-13.93h7.34v14.3q-.37 6.22-12.47 10.26v-4c3.67-1.5 5.41-3.7 5.13-6.63zm3.67-68.18h7.33v2.94H404q1.47-2.2 1.47-10.27h8.8q-.37 7.33-7.33 10.27h18.32v-2.94h7.33v48.39h-7.33v-5.14h-31.54v5.14h-7.33zm7.33 39.59h31.52v-33h-31.52v8.07h26.39v3.66h-26.39v8.06h25.66v3.67h-25.66zm1.47 34.45v-22.72h7.33v21.62q-.37 2.56 2.56 2.94h13.2a3.3 3.3 0 003.66-3.3l2.2-11.73h1.1v9.53h2.2V377q0 6.58-6.6 6.59h-18.69q-7.33.01-6.96-8.42zm12.09-26.75h.37c5.13 4.39 8.8 8.19 11 11.36a50.86 50.86 0 01-3.66 7.33 56.4 56.4 0 01-7.71-18.69zm19.79 5.49h.37A72.35 72.35 0 01441.37 370a43.34 43.34 0 01-4 7q-6.27-8.06-10.3-23.09zM298 509v-42.19h-11.72v-3.67H298v-3.67h7.33v47.29A42.3 42.3 0 00321.1 495h.36q-7 17.24-31.52 24.92 1.83-6.24-1.46-9.89A54.42 54.42 0 00298 509zm-4.4-74l.37-.37a74.9 74.9 0 0111.36 11.73 31.42 31.42 0 01-4.77 8.8h-.36q-4.04-7.79-6.59-20.24zm35.19 9.89h-16.85v-3.66h38.11v3.66h-13.92v70.74q-.37 6.6-12.83 9.9c-.5-1.47-1.23-2-2.2-1.47l-4 .74-.74-1.1a3.94 3.94 0 011.1-.74q11.35-3.66 11.37-7.33zM379.06 522.88v-83.2h7.33v74.41q11-8.06 11.73-23.09v-3.67h-4.4v-25.66h6.6v1.47h8.79l8.07-16.86 3.66 2.2-7.69 14.66h2.56v-1.47h6.6v25.66H415V506q-.37 2.94 2.93 2.57c1.47.25 2.32-.61 2.57-2.57l1.83-14.29h1.47l-.37 12.46H426q0 12.84-8.43 11.36h-2.19q-7.71.36-7-6.59v-21.61H415v-4.4h-14.68v4.4h5.13q.36 18-16.49 27.49h-2.57v8.06zm16.13-72.57h-.37a77.27 77.27 0 01-4-16.13l.37-.36A97.33 97.33 0 01400 443a7.57 7.57 0 01-1.46 2.93l-.37.37a99.12 99.12 0 018.06 6.6 38 38 0 01-2.56 7.33h-.37a36.43 36.43 0 01-5.5-13.56 26.77 26.77 0 01-2.61 3.64zM415 467.54h-14.68v11.73H415zm13.93-24.19h-25.68V439h26.39v-3h6.6v76.23q1.1 10.63-11.73 13.57c-.25-1.23-1.35-1.6-3.3-1.1l-5.13.73-.37-1.1q14.3-4 13.2-9.53zM297.27 636.87h-8.06v-48.38h8.06v5.13h15.4v-19.06h8.06v19.06h15.4v-5.13h8.06v47.65h-8.06v-5.86h-15.4v35.55h-8.06v-35.55h-15.4zm15.4-10.26v-29.32h-15.4v29.32zm8.06-29.32v29.32h15.4v-29.32zM383.46 642.74v-46.92h7.33v41.79q-.37 8.05-13.2 15.39v-4.4c3.67-.97 5.62-2.93 5.87-5.86zm13.19 16.49V587H404v67.8q0 2.56 2.94 2.94h10.26q3.66-.37 4-3.3l1.47-19.8h1.83v13.2h2.93v2.57q.74 13.92-5.13 13.92h-20.52c-3.17-.21-4.89-1.93-5.13-5.1zm19.8-49.48h-.37q-4-5.85-12.1-32.62l.37-.37q1.09 1.85 5.86 8.8 6.6 9.9 10.63 13.93a71.31 71.31 0 01-4.39 10.26zm7.33-19.75l.36-.37q7 16.86 16.5 45.82-.37 5.13-6.23 13.19H434q-2.57-13.54-4.77-27.12-2.88-15.79-5.45-31.52z"/>
+            <path d="M321.91 1130.13v-2.25h31.88v2.25h-10.88v8.62h4.88v-2.62h3.75v36.18h-3.75v-3.37h-20.25v3.37h-3.75v-36.18h3.75v2.62h4.87v-8.62zm24.38 29.62h-4.13c-1.75 0-2.62-1.12-2.62-3.37V1141h-3.75v5.25q-.57 7.32-6.38 14.25h-1.87v6.56h20.25V1156a3.4 3.4 0 00-1.5 3.75zm-13.88-11.62V1141h-4.87v19.5q3.75-2.43 4.87-12.37zm3.38-9.38h3.75v-8.62h-3.75zm7.12 2.25v13.5c0 1.63 1.63 2 4.88 1.13V1141zM370.5 1162v-29.25h3.75v1.5h7.13v-7.12h3.75v7.12h7.12v-.94H396v27.19h-3.75v-3.56h-7.12v11.44c0 .49.37.81 1.12.93h9.19a1.83 1.83 0 001.69-1.31l1.5-7.12h.37l-.37 5.43h1.12v3q0 3.75-3.37 3.75h-11.44c-2.38-.12-3.56-1.62-3.56-4.5v-11.62h-7.13v5.06zm3.75-17.44h7.13v-8.43h-7.13zm0 1.88v8.62h7.13v-8.62zm18-1.88v-8.43h-7.12v8.43zm0 1.88h-7.12v8.62h7.12z"/>
+          </g>
+        </svg>
+      </section>
+
+      <section data-name="login" data-status-bar="primary-color" data-nav-bar="hide">
+        <img src="school-icon.svg" alt="西电校徽">
+        <h1>统一身份验证</h1>
+        <div class="login-form">
+          <div class="input-container">
+            <input autocomplete="off" name="username" id="username" required>
+            <label for="username">学号</label>
+          </div>
+          <div class="input-container">
+            <input autocomplete="off" type="password" name="password" id="password" required>
+            <label for="password">密码</label>
+          </div>
+          <span class="tips" id="reset-password">忘记了登录密码？</span>
+          <button id="login" data-ripple>登录</button>
+        </div>
+      </section>
+
+      <section data-main data-name="selection" data-status-bar="semi-transparent" data-nav-bar="semi-transparent">
+        <h1>选择你想要接收的通知</h1>
+        <ol class="scrollable">
+          <li>
+            <label data-ripple>
+              <img src="selection-icons/study-in-xidian.svg" alt="学在西电图标">
+              <span>
+                <span>学在西电</span>
+                <span>西电官方学习平台</span>
+              </span>
+              <input type="checkbox">
+            </label>
+          </li>
+          <li>
+            <label data-ripple>
+              <img src="selection-icons/xidian-wechat.svg" alt="西电企业号图标">
+              <span>
+                <span>西电企业号</span>
+                <span>晨午晚检提醒 & 推送校内新闻</span>
+              </span>
+              <input type="checkbox">
+            </label>
+          </li>
+          <li>
+            <label data-ripple>
+              <img src="selection-icons/shanxi-CYL.jpg" alt="陕西共青团图标">
+              <span>
+                <span>青年大学习</span>
+                <span>周周打卡学习不落下</span>
+              </span>
+              <input type="checkbox">
+            </label>
+          </li>
+          <li>
+            <label data-ripple>
+              <img src="selection-icons/yuketang.png" alt="雨课堂图标">
+              <span>
+                <span>雨课堂</span>
+                <span>雨课堂开课提醒</span>
+              </span>
+              <input type="checkbox">
+            </label>
+          </li>
+          <li>
+            <label data-ripple>
+              <img src="selection-icons/U-school.png" alt="U 校园图标">
+              <span>
+                <span>U 校园</span>
+                <span>英语作业全知道</span>
+              </span>
+              <input type="checkbox">
+            </label>
+          </li>
+        </ol>
+      </section>
+
+      <section class="scrollable" data-main data-name="notify" data-status-bar="semi-transparent" data-nav-bar="semi-transparent">
+        <h1><span>消息通知历史</span><button data-ripple>设置</button></h1>
+        <ol>
+          <li>
+            <div class="card">
+              <figure>
+                <img src="selection-icons/xidian-wechat.svg" alt="西电企业号图标">
+                <figcaption>西电企业号</figcaption>
+              </figure>
+              <h2>晚检开始啦！！！</h2>
+              <p><span>今天 下午 6 点</span>又双叒到了一天三次的晨午晚检！疫情期间，各位西电学子千万不要错过哦！</p>
+            </div>
+          </li>
+          <li>
+            <div class="card">
+              <figure>
+                <img src="selection-icons/yuketang.png" alt="雨课堂图标">
+                <figcaption>雨课堂</figcaption>
+              </figure>
+              <h2>要上课了同志们</h2>
+              <p><span>今天 下午 3 点 35 分</span>由 王老师 预定的 3：55 分的语文课程即将开始。</p>
+            </div>
+          </li>
+          <li>
+            <div class="card">
+              <figure>
+                <img src="selection-icons/study-in-xidian.svg" alt="学在西电图标">
+                <figcaption>学在西电</figcaption>
+              </figure>
+              <h2>计算机导论新作业</h2>
+              <p><span>今天 下午 1 点 50 分</span>请同学们在规定时间内完成线上 XDOJ 707 测试</p>
+            </div>
+          </li>
+          <li>
+            <div class="card">
+              <figure>
+                <img src="selection-icons/xidian-wechat.svg" alt="西电企业号图标">
+                <figcaption>西电企业号</figcaption>
+              </figure>
+              <h2>午检开始了！！！</h2>
+              <p><span>今天 中午 12 点</span>又双到了一天三次的晨午晚检！疫情期间，各位西电学子千万不要错过哦！</p>
+            </div>
+          </li>
+          <li>
+            <div class="card">
+              <figure>
+                <img src="selection-icons/xidian-wechat.svg" alt="西电企业号图标">
+                <figcaption>西电企业号</figcaption>
+              </figure>
+              <h2>起床啦骚年 —— 晨检</h2>
+              <p><span>今天 上午 6 点</span>又到了一天三次的晨午晚检！疫情期间，各位西电学子千万不要错过哦！</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section data-name="nav-bar" data-mode="hide">
+        <nav>
+          <ol>
+            <li data-name="selection" data-ripple>订阅列表</li>
+            <li data-name="notify" data-ripple>历史通知</li>
+          </ol>
+        </nav>
+      </section>
+    </div>
+  </main>
+  <script type="module">
+    import Ripple from './Ripple.min.js';
+    Ripple.mark = 'data-ripple';
+    Ripple.load();
+
+    const pages = document.getElementsByTagName('section');
+    const mainNavs = document.querySelectorAll('body > nav > ol > li');
+    const pageNavs = document.querySelectorAll('section nav > ol > li');
+    let currentName = 'start';
+    let cancelableTimeout = null;
+
+    const getPage = (name) => {
+      return [...pages].find((page) => page.dataset.name === name);
+    };
+
+    const getMainNav = (name) => {
+      return [...mainNavs].find((nav) => nav.dataset.name === name);
+    };
+
+    const setPage = (name) => {
+      if (cancelableTimeout) clearTimeout(cancelableTimeout);
+      cancelableTimeout = null;
+
+      delete getPage(currentName).dataset.selected;
+
+      const targetPage = getPage(name);
+      targetPage.dataset.selected = '';
+
+      getPage('status-bar').dataset.mode = targetPage.dataset.statusBar;
+      getPage('nav-bar').dataset.mode = targetPage.dataset.navBar;
+
+      getMainNav(currentName).removeAttribute('data-selected');
+      getMainNav(name).setAttribute('data-selected', '');
+      currentName = name;
+    };
+
+    [...mainNavs, ...pageNavs].forEach((nav) => {
+      nav.addEventListener('click', (e) => {
+        const { name } = e.currentTarget.dataset;
+        setPage(name);
+      });
+    });
+
+
+
+    getPage('status-bar').addEventListener('click', () => {
+      setPage('notify-panel');
+    });
+
+    {
+      cancelableTimeout = setTimeout(() => {
+        setPage('login');
+      }, 2000);
+      window.addEventListener('keyup', (e) => {
+        if (e.key !== 'Enter') return;
+        setPage('login');
+      })
+    }
+
+    document.getElementById('login').addEventListener('click', (e) => {
+      const button = e.currentTarget;
+      button.classList.add('logging');
+
+      cancelableTimeout = setTimeout(() => {
+        setPage('selection');
+      }, 2000);
+    });
+
+    {
+      const notifyPage = getPage('notify');
+      let lastKnownScrollTop = notifyPage.scrollTop;
+      getPage('notify').addEventListener('scroll', (e) => {
+        const page = e.currentTarget;
+        const currentScrollTop = page.scrollTop;
+
+        if (currentScrollTop > lastKnownScrollTop) {
+          getPage('status-bar').dataset.mode = 'hide';
+          getPage('nav-bar').dataset.mode = 'hide';
+        } else {
+          getPage('status-bar').dataset.mode = notifyPage.dataset.statusBar;
+          getPage('nav-bar').dataset.mode = notifyPage.dataset.statusBar;
+        }
+
+        lastKnownScrollTop = currentScrollTop;
+      });
+    }
+  </script>
+</body>
+</html>
